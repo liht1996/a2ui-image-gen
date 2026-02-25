@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A2UI Image Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 A2UI Image Generator</h1>
+            <p class="subtitle">Chat-based image generation with conditional controls</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Chat Area -->
+            <div class="chat-container">
+                <div id="chat-messages" class="chat-messages">
+                    <div class="system-message">
+                        <p>👋 Welcome! Describe the image you want to generate.</p>
+                        <p class="hint">💡 Tip: Mention colors or composition to get interactive controls!</p>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="input-container">
+                    <textarea 
+                        id="user-input" 
+                        placeholder="Describe your image... (e.g., 'Generate a sunset with warm orange tones')"
+                        rows="2"
+                    ></textarea>
+                    <button id="send-btn" class="send-btn">
+                        <span class="btn-text">Send</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Widgets Panel (appears conditionally) -->
+            <div id="widgets-panel" class="widgets-panel hidden">
+                <div class="widgets-header">
+                    <h3>Fine-tune Controls</h3>
+                    <button id="close-widgets" class="close-btn">×</button>
+                </div>
+                
+                <div id="widgets-content" class="widgets-content">
+                    <!-- Widgets will be dynamically inserted here -->
+                </div>
+
+                <div class="widgets-actions">
+                    <button id="apply-widgets" class="apply-btn">Apply Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Status -->
+        <div id="connection-status" class="connection-status">
+            <span class="status-dot"></span>
+            <span class="status-text">Connecting...</span>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <p>Generating your image...</p>
+    </div>
+
+    <script src="widgets.js"></script>
+    <script src="client.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

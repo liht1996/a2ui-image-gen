@@ -1,0 +1,14 @@
+# A2UI Image Generation Agent Requirements
+
+# Core dependencies
+aiohttp>=3.9.0
+aiohttp-cors>=0.7.0
+google-genai>=0.6.0
+Pillow>=10.0.0
+
+# Optional dependencies for enhanced features
+python-dotenv>=1.0.0
+
+# Development dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
