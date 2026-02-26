@@ -13,29 +13,177 @@ class WidgetRenderer {
      * Render widgets from A2UI response
      */
     renderWidgets(parts) {
+        console.log('[WidgetRenderer] renderWidgets called with', parts.length, 'parts');
         const widgetsContent = document.getElementById('widgets-content');
         widgetsContent.innerHTML = '';
         this.widgets = {};
         this.widgetData = {};
 
-        const widgetParts = parts.filter(part => part.a2ui);
+        // Extract widgets from A2UI Surface format or legacy format
+        const widgets = this.extractWidgets(parts);
         
-        if (widgetParts.length === 0) {
+        console.log('[WidgetRenderer] Extracted widgets:', widgets.length);
+        
+        if (widgets.length === 0) {
+            console.log('[WidgetRenderer] No widgets found, returning false');
             return false;
         }
 
-        widgetParts.forEach(part => {
-            const widget = part.a2ui;
+        widgets.forEach(widget => {
+            console.log('[WidgetRenderer] Creating widget:', widget.type, widget.id);
             const widgetElement = this.createWidgetDynamic(widget);
             if (widgetElement) {
                 widgetsContent.appendChild(widgetElement);
                 this.widgets[widget.id] = widget;
                 // Initialize widget data with default values
                 this.widgetData[widget.id] = this.getDefaultValues(widget);
+                console.log('[WidgetRenderer] Widget created successfully');
+            } else {
+                console.warn('[WidgetRenderer] Failed to create widget element');
             }
         });
 
+        console.log('[WidgetRenderer] Total widgets rendered:', Object.keys(this.widgets).length);
         return true;
+    }
+
+    /**
+     * Extract widgets from various A2UI formats
+     */
+    extractWidgets(parts) {
+        const widgets = [];
+        let dataModel = {};
+        
+        // First pass: extract data model
+        for (const part of parts) {
+            if (part.kind === 'data' && part.data && part.data.dataModelUpdate) {
+                console.log('[WidgetRenderer] Found dataModelUpdate');
+                const contents = part.data.dataModelUpdate.contents || [];
+                for (const content of contents) {
+                    dataModel[content.key] = content.valueString || content.valueInt || content.valueNumber || content.valueBoolean;
+                }
+                console.log('[WidgetRenderer] Data model:', dataModel);
+            }
+        }
+        
+        // Store data model for getPathValue
+        this.currentDataModel = dataModel;
+        
+        // Second pass: extract widgets
+        for (const part of parts) {
+            // Format 1: Legacy simple a2ui parts
+            if ((part.kind === 'a2ui' && part.a2ui) || part.a2ui) {
+                widgets.push(part.a2ui);
+                console.log('[WidgetRenderer] Found legacy widget:', part.a2ui.type);
+            }
+            // Format 2: A2UI Surface format with surfaceUpdate
+            else if (part.kind === 'data' && part.data && part.data.surfaceUpdate) {
+                console.log('[WidgetRenderer] Found surfaceUpdate with components');
+                const components = part.data.surfaceUpdate.components || [];
+                
+                for (const comp of components) {
+                    const widget = this.convertSurfaceComponentToWidget(comp);
+                    if (widget) {
+                        widgets.push(widget);
+                        console.log('[WidgetRenderer] Converted surface component to widget:', widget.type);
+                    }
+                }
+            }
+        }
+        
+        return widgets;
+    }
+
+    /**
+     * Convert A2UI Surface component to simple widget format
+     */
+    convertSurfaceComponentToWidget(component) {
+        const id = component.id;
+        const comp = component.component;
+        
+        if (!comp || !id) return null;
+        
+        // Generate a better label from the component ID (e.g., "size-slider" -> "Size")
+        const generateLabel = (id, defaultLabel) => {
+            const label = comp[Object.keys(comp)[0]]?.label?.literalString;
+            if (label) return label;
+            
+            // Convert ID to readable label: "size-slider" -> "Size", "color-input" -> "Color"
+            const cleaned = id.replace(/-slider|-input|-field|-widget|-control/gi, '');
+            return cleaned.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') || defaultLabel;
+        };
+        
+        // Check component type
+        if (comp.Slider) {
+            const pathValue = comp.Slider.value?.path ? this.getPathValue(comp.Slider.value.path) : null;
+            const defaultValue = pathValue !== null ? pathValue : (comp.Slider.minValue || 0);
+            
+            return {
+                id: id,
+                type: 'slider',
+                label: generateLabel(id, 'Slider'),
+                properties: {
+                    min: comp.Slider.minValue || 0,
+                    max: comp.Slider.maxValue || 100,
+                    default: defaultValue,
+                    step: comp.Slider.stepSize || 1
+                }
+            };
+        } else if (comp.TextField) {
+            const pathValue = comp.TextField.value?.path ? this.getPathValue(comp.TextField.value.path) : null;
+            
+            return {
+                id: id,
+                type: 'text-input',
+                label: generateLabel(id, 'Text'),
+                properties: {
+                    default: pathValue || '',
+                    hint: comp.TextField.hintText?.literalString || ''
+                }
+            };
+        } else if (comp.Select) {
+            const pathValue = comp.Select.value?.path ? this.getPathValue(comp.Select.value.path) : null;
+            
+            return {
+                id: id,
+                type: 'dropdown',
+                label: generateLabel(id, 'Select'),
+                properties: {
+                    options: comp.Select.options || [],
+                    default: pathValue || (comp.Select.options && comp.Select.options[0])
+                }
+            };
+        } else if (comp.Switch) {
+            const pathValue = comp.Switch.value?.path ? this.getPathValue(comp.Switch.value.path) : null;
+            
+            return {
+                id: id,
+                type: 'toggle',
+                label: generateLabel(id, 'Toggle'),
+                properties: {
+                    default: pathValue !== null ? pathValue : false
+                }
+            };
+        }
+        // Skip Image, Text, Column components - they're not interactive widgets
+        else if (comp.Image || comp.Text || comp.Column || comp.Row) {
+            console.log('[WidgetRenderer] Skipping non-interactive component:', Object.keys(comp)[0]);
+            return null;
+        }
+        
+        console.warn('[WidgetRenderer] Unknown component type:', Object.keys(comp));
+        return null;
+    }
+
+    /**
+     * Get value from data model path
+     */
+    getPathValue(path) {
+        // Extract key from path (e.g., "/size" -> "size")
+        const key = path.replace(/^\//, '');
+        const value = this.currentDataModel ? this.currentDataModel[key] : null;
+        console.log('[WidgetRenderer] getPathValue:', path, '->', value);
+        return value;
     }
 
     /**
@@ -832,6 +980,10 @@ class WidgetRenderer {
      * Returns array of A2UI widget parts following the protocol
      */
     getWidgetData() {
+        console.log('[WidgetRenderer] getWidgetData called');
+        console.log('[WidgetRenderer] Current widgets:', Object.keys(this.widgets));
+        console.log('[WidgetRenderer] Current widgetData:', this.widgetData);
+        
         // For backward compatibility, check for old widget types first
         const result = {};
         const widgetParts = [];
@@ -855,14 +1007,17 @@ class WidgetRenderer {
         
         // Return old format if any old widgets present
         if (Object.keys(result).length > 0) {
+            console.log('[WidgetRenderer] Returning old format:', result);
             return result;
         }
         
         // For dynamic widgets, return array of widget parts
         if (widgetParts.length > 0) {
+            console.log('[WidgetRenderer] Returning widget_parts:', widgetParts);
             return { widget_parts: widgetParts };
         }
         
+        console.log('[WidgetRenderer] No widget data to return');
         return null;
     }
 

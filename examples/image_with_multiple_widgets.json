@@ -1,0 +1,96 @@
+[
+  {
+    "surfaceUpdate": {
+      "surfaceId": "main",
+      "components": [
+        {
+          "id": "header",
+          "component": {
+            "Text": {
+              "text": {"literalString": "Image Generation with Controls"}
+            }
+          }
+        },
+        {
+          "id": "image-display",
+          "component": {
+            "Image": {
+              "sources": [
+                {
+                  "uri": {"path": "/generated_image"},
+                  "mimeType": "image/jpeg"
+                }
+              ],
+              "description": {"literalString": "Generated Image"}
+            }
+          }
+        },
+        {
+          "id": "color-input",
+          "component": {
+            "TextField": {
+              "value": {"path": "/color"},
+              "label": {"literalString": "Color"},
+              "hintText": {"literalString": "Enter color"}
+            }
+          }
+        },
+        {
+          "id": "size-slider",
+          "component": {
+            "Slider": {
+              "value": {"path": "/size"},
+              "label": {"literalString": "Size"},
+              "min": 1,
+              "max": 100,
+              "step": 1
+            }
+          }
+        },
+        {
+          "id": "style-dropdown",
+          "component": {
+            "Select": {
+              "value": {"path": "/style"},
+              "label": {"literalString": "Style"},
+              "options": [
+                {"value": "realistic", "label": "Realistic"},
+                {"value": "cartoon", "label": "Cartoon"},
+                {"value": "abstract", "label": "Abstract"}
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "dataModelUpdate": {
+      "surfaceId": "main",
+      "contents": [
+        {
+          "key": "generated_image",
+          "valueString": "data:image/jpeg;base64,..."
+        },
+        {
+          "key": "color",
+          "valueString": "blue"
+        },
+        {
+          "key": "size",
+          "valueInt": 50
+        },
+        {
+          "key": "style",
+          "valueString": "realistic"
+        }
+      ]
+    }
+  },
+  {
+    "beginRendering": {
+      "surfaceId": "main",
+      "root": "header"
+    }
+  }
+]

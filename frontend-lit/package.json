@@ -1,0 +1,18 @@
+{
+  "name": "a2ui-image-gen-frontend",
+  "version": "1.0.0",
+  "description": "A2UI Image Generation Frontend with Lit Renderer",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@a2ui/lit": "^0.8.1",
+    "lit": "^3.3.1"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

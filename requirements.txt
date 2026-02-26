@@ -1,14 +1,20 @@
 # A2UI Image Generation Agent Requirements
 
+# Google ADK (Agent Development Kit) and A2A SDK
+google-adk>=1.8.0
+a2a-sdk>=0.3.24
+
 # Core dependencies
-aiohttp>=3.9.0
-aiohttp-cors>=0.7.0
-google-genai>=0.6.0
+google-genai>=1.64.0
 Pillow>=10.0.0
+python-dotenv
+jsonschema>=4.0.0
 
-# Optional dependencies for enhanced features
-python-dotenv>=1.0.0
+# Web server
+click
+uvicorn
+starlette
 
-# Development dependencies
+# For development/testing
 pytest>=7.4.0
 pytest-asyncio>=0.21.0
